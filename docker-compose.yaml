@@ -1,0 +1,22 @@
+services:
+  postgres:
+    container_name: togo_api_postgres
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_DB=togo_db
+      - POSTGRES_USER=togo_user
+      - POSTGRES_PASSWORD=togo_password
+    ports:
+      - "5431:5432"
+    volumes:
+      - togo_api_postgres_data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U togo_user -d togo_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  togo_api_postgres_data:
