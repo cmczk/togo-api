@@ -23,7 +23,7 @@ func (s *TodoStore) GetAll() (todos []models.Todo, err error) {
 
 	query := `
 	SELECT
-		id, title, description,
+		id, title, description, completed,
 		created_at, updated_at
 	FROM todos
 	ORDER BY created_at DESC;`
@@ -35,17 +35,19 @@ func (s *TodoStore) GetAll() (todos []models.Todo, err error) {
 	return todos, nil
 }
 
-func (s *TodoStore) GetByID(id int) (todo *models.Todo, err error) {
+func (s *TodoStore) GetByID(id int) (*models.Todo, error) {
 	const op = "database.todos.GetByID"
+
+	var todo models.Todo
 
 	query := `
 	SELECT
-		id, title, description,
+		id, title, description, completed,
 		created_at, updated_at
 	FROM todos
 	WHERE id = $1;`
 
-	if err := s.db.Get(todo, query, id); err != nil {
+	if err := s.db.Get(&todo, query, id); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("todo not found")
 		}
@@ -53,7 +55,7 @@ func (s *TodoStore) GetByID(id int) (todo *models.Todo, err error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return todo, nil
+	return &todo, nil
 }
 
 func (s *TodoStore) Create(data models.CreateTodoInput) (*models.Todo, error) {
@@ -65,7 +67,7 @@ func (s *TodoStore) Create(data models.CreateTodoInput) (*models.Todo, error) {
 	INSERT INTO
 		todos (title, description, completed)
 	VALUES ($1, $2, $3)
-	RETURNING id, title, description, created_at, updated_at;`
+	RETURNING id, title, description, completed, created_at, updated_at;`
 
 	if err := s.db.QueryRowx(
 		query, data.Title, data.Description, data.Completed,
@@ -100,7 +102,7 @@ func (s *TodoStore) Update(id int, data models.UpdateTodoInput) (*models.Todo, e
 	UPDATE todos
 	SET title = $1, description = $2, completed = $3, updated_at = $4
 	WHERE id = $5
-	RETURNING id, title, description, created_at, updated_at;`
+	RETURNING id, title, description, completed, created_at, updated_at;`
 
 	var updatedTodo models.Todo
 

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -35,9 +36,10 @@ func getIDFromURLPath(urlPath string, prefix string) (int, error) {
 	return strconv.Atoi(idStr)
 }
 
-func (h *Handler) getAllTodos(w http.ResponseWriter, _ *http.Request) {
+func (h *Handler) GetAllTodos(w http.ResponseWriter, _ *http.Request) {
 	todos, err := h.store.GetAll()
 	if err != nil {
+		log.Println(err.Error())
 		respondWithError(w, http.StatusInternalServerError, "cannot get all todos")
 		return
 	}
@@ -45,9 +47,10 @@ func (h *Handler) getAllTodos(w http.ResponseWriter, _ *http.Request) {
 	respondWithJSON(w, http.StatusOK, todos)
 }
 
-func (h *Handler) getTodoByID(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetTodoByID(w http.ResponseWriter, r *http.Request) {
 	id, err := getIDFromURLPath(r.URL.Path, "/todos/")
 	if err != nil {
+		log.Println(err.Error())
 		respondWithError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
@@ -55,6 +58,7 @@ func (h *Handler) getTodoByID(w http.ResponseWriter, r *http.Request) {
 	todo, err := h.store.GetByID(id)
 	if err != nil {
 		// TODO: add 404 case
+		log.Println(err.Error())
 		respondWithError(w, http.StatusInternalServerError, "cannot get todo by id")
 		return
 	}
@@ -62,7 +66,7 @@ func (h *Handler) getTodoByID(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, todo)
 }
 
-func (h *Handler) createTodo(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateTodo(w http.ResponseWriter, r *http.Request) {
 	var input models.CreateTodoInput
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -84,7 +88,7 @@ func (h *Handler) createTodo(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusCreated, todo)
 }
 
-func (h *Handler) updateTodo(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateTodo(w http.ResponseWriter, r *http.Request) {
 	id, err := getIDFromURLPath(r.URL.Path, "/todos/")
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "invalid id")
@@ -112,7 +116,7 @@ func (h *Handler) updateTodo(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, todo)
 }
 
-func (h *Handler) deleteTodo(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteTodo(w http.ResponseWriter, r *http.Request) {
 	id, err := getIDFromURLPath(r.URL.Path, "/todos/")
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "invalid id")
